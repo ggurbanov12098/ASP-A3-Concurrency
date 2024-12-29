@@ -18,40 +18,40 @@ public class ImagePanel extends JPanel{
     public ImagePanel(BufferedImage originalImage) {
         this.originalImage = originalImage;
          
-        // Determine screen size, assume mine is 1920x1080
+        // Determine screen size
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        //if in DisplaySettings->Scale enabled for 125%, if not take original screenSize and skip this
-        //DPI Scaling: 1920/1.25(125%) = 1536   1080/1.25(125%) = 864
-        System.out.println("screenSize.width is: " + screenSize.width);     //1536
-        System.out.println("screenSize.height is: " + screenSize.height);   //864
+        // getScreenSize() returns the size of the screen in pixels ...
+        // ... with DPI scaling if applied (important for high resolution displays)
+        System.out.println("screenSize.width is: " + screenSize.width);
+        System.out.println("screenSize.height is: " + screenSize.height);
 
-        // Window Resolution: 1228.8x691.2 (80% of width and height)
-        int maxWidth = (int) (screenSize.width * 0.8);  //1536*0.8 = 1228.8
-        int maxHeight = (int) (screenSize.height * 0.8);//864*0.8 = 691.2
+        // Window Resolution (80% of width and height)
+        int maxWidth = (int) (screenSize.width * 0.8);
+        int maxHeight = (int) (screenSize.height * 0.8);
 
-        // Assume inputted image has 3840x2160 resolution
+        // getWidth and getHeight of the inputted image to know the original size
         int imageWidth = originalImage.getWidth();
-        System.out.println("imageWidth is: " + imageWidth);     //3840
         int imageHeight = originalImage.getHeight();
-        System.out.println("imageHeight is: " + imageHeight);   //2160
+        System.out.println("imageWidth is: " + imageWidth);
+        System.out.println("imageHeight is: " + imageHeight);
 
         // Calculate scaling ratio while maintaining aspect ratio
-        double widthRatio = (double) maxWidth / imageWidth;     //// 1228.8/3840
-        System.out.println("widthRatio is: " + widthRatio);     //0.31979166666666664
-        double heightRatio = (double) maxHeight / imageHeight;  //// 691.2/2160
-        System.out.println("heightRatio is: " + heightRatio);   //0.3199074074074074
+        double widthRatio = (double) maxWidth / imageWidth;
+        double heightRatio = (double) maxHeight / imageHeight;
 
+        // Get the minimum ratio to fit the image in the window
         double ratio = Math.min(1.0, Math.min(widthRatio, heightRatio)); 
-        System.out.println("Ratio is: " + ratio);               //0.31979166666666664 
+        System.out.println("Ratio is: " + ratio);
 
-        displayedWidth = (int) (imageWidth * ratio);            // 3840*0.31979166666666664 = 1227.99744
-        displayedHeight = (int) (imageHeight * ratio);          // 2160*0.31979166666666664 = 690.74999
+        // Scale the image dimensions
+        displayedWidth = (int) (imageWidth * ratio);
+        displayedHeight = (int) (imageHeight * ratio);
 
         // Create a scaled instance of the image for display
         displayedImage = new BufferedImage(displayedWidth, displayedHeight, BufferedImage.TYPE_INT_RGB);
         Graphics2D g = displayedImage.createGraphics();
-        g.drawImage(originalImage, 0, 0, displayedWidth, displayedHeight, null); //draw scaled image
-        g.dispose(); // release resources of G2D object
+        g.drawImage(originalImage, 0, 0, displayedWidth, displayedHeight, null); // Draw the image to the scaled size
+        g.dispose(); // Release resources used by the Graphics object
 
         // Set the preferred size of the panel
         setPreferredSize(new Dimension(displayedWidth, displayedHeight));

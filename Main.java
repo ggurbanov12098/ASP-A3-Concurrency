@@ -2,26 +2,14 @@ import javax.swing.SwingUtilities;
 
 public class Main {
     public static void main(String[] args) {
-        // Validate command-line arguments
-        if (args.length != 3) {
-            System.err.println("Usage: java Main <filename> <square size> <mode>");
-            System.err.println("Mode: 'S' for single-threaded, 'M' for multi-threaded");
-            System.exit(1);
-        }
+        final String filename = args[0];            // The filename of the image to process
+        final int squareSize; //args[1]             // The side length of the averaging square
+        final String mode = args[2].toUpperCase();  // The processing mode
 
-        // Mode validation
-        final String mode = args[2].toUpperCase();
-        if (!mode.equals("S") && !mode.equals("M")) {
-            System.err.println("Error: Invalid processing mode. Use 'S' for single-threaded or 'M' for multi-threaded.");
-            System.exit(1);
-        }
-
-
-        int tempSquareSize;
-        // Parse and validate the square size argument
+        // Square size validation
         try {
-            tempSquareSize = Integer.parseInt(args[1]);
-            if (tempSquareSize <= 0) {
+            squareSize = Integer.parseInt(args[1]);
+            if (squareSize <= 0) {
                 throw new NumberFormatException("Square size must be a positive integer.");
             }
         } catch (NumberFormatException e) {
@@ -29,10 +17,21 @@ public class Main {
             System.exit(1);
             return; // Unreachable, but added to satisfy the compiler
         }
-        
-        final String filename = args[0];
-        final int squareSize = tempSquareSize; // Now squareSize is final
-        // final String mode = args[2].toUpperCase();
+
+        // Mode validation
+        if (!mode.equals("S") && !mode.equals("M")) {
+            System.err.println("Error: Invalid processing mode. Use 'S' for single-threaded or 'M' for multi-threaded.");
+            System.exit(1);
+        }
+
+        // Command-line argument validation
+        if (args.length != 3) {
+            System.err.println("Usage: java Main <filename> <square size> <mode>");
+            System.err.println("Mode: 'S' for single-threaded, 'M' for multi-threaded");
+            System.exit(1);
+        }
+
+        // Create the ImageAverager GUI on the Event Dispatch Thread
         SwingUtilities.invokeLater(() -> new ImageAverager(filename, squareSize, mode));
     }
 }

@@ -28,7 +28,7 @@ public class ImageProcessor {
         int xEnd = Math.min(xStart + squareSize, width);
         int yEnd = Math.min(yStart + squareSize, height);
         long sumRed = 0, sumGreen = 0, sumBlue = 0;
-        int count = 0;
+        int countOrigPixels = 0;
         // Accumulate RGB values within the block
         for (int y = yStart; y < yEnd; y++) {
             for (int x = xStart; x < xEnd; x++) {
@@ -37,18 +37,19 @@ public class ImageProcessor {
                 sumRed += color.getRed();
                 sumGreen += color.getGreen();
                 sumBlue += color.getBlue();
-                count++;
+                countOrigPixels++; // Count the number of pixels in the block
             }
         }
         // Calculate average RGB values
-        int avgRed = (int) (sumRed / count);
-        int avgGreen = (int) (sumGreen / count);
-        int avgBlue = (int) (sumBlue / count);
+        int avgRed = (int) (sumRed / countOrigPixels);
+        int avgGreen = (int) (sumGreen / countOrigPixels);
+        int avgBlue = (int) (sumBlue / countOrigPixels);
         Color avgColor = new Color(avgRed, avgGreen, avgBlue);
+
         // Set the entire block to the average color
         for (int y = yStart; y < yEnd; y++) {
             for (int x = xStart; x < xEnd; x++) {
-                image.setRGB(x, y, avgColor.getRGB());
+                image.setRGB(x, y, avgColor.getRGB()); // Set the RGB value of the pixel
             }
         }
     }
@@ -61,12 +62,12 @@ public class ImageProcessor {
     public void processImageSingleThreaded(Runnable repaintCallback) {
         int width = image.getWidth();
         int height = image.getHeight();
+
         // Iterate the image while squareSize increments
         for (int y = 0; y < height; y += squareSize) {
             for (int x = 0; x < width; x += squareSize) {
                 processBlock(x, y);
                 // Schedule a repaint on the Event Dispatch Thread (EDT)
-                // Source: https://github.com/mgarin/weblaf/wiki/Event-Dispatch-Thread
                 SwingUtilities.invokeLater(repaintCallback);
                 try {
                     Thread.sleep(10); // Delay to visualize
@@ -87,24 +88,24 @@ public class ImageProcessor {
      * @param repaintCallback callback to repaint the image in the GUI
      */
     public void processImageMultiThreaded(Runnable repaintCallback) {
-        int numThreads = Runtime.getRuntime().availableProcessors();
-        Thread[] threads = new Thread[numThreads];
+        int numThreads = Runtime.getRuntime().availableProcessors();    // Number of available CPU cores
+        Thread[] threads = new Thread[numThreads];  // Array to store threads
         int height = image.getHeight();
         int segmentHeight = height / numThreads;
-        // Create and start threads
+        // Create and start threads for each segment
         for (int i = 0; i < numThreads; i++) {
             final int threadIndex = i;
             threads[i] = new Thread(() -> {
-                int startY = threadIndex * segmentHeight;
-                int endY = (threadIndex == numThreads - 1) ? height : startY + segmentHeight;
-                // Iterate over the assigned segment
+                int startY = threadIndex * segmentHeight;   // Start of the segment
+                int endY = (threadIndex == numThreads - 1) ? height : startY + segmentHeight;   // Last thread handles the remainder
+                
+                // Iterate the image while squareSize increments within the segment assigned to the thread
                 for (int y = startY; y < endY; y += squareSize) {
                     for (int x = 0; x < image.getWidth(); x += squareSize) {
                         processBlock(x, y);
-                        // Scheduling repaint
-                        SwingUtilities.invokeLater(repaintCallback);
+                        SwingUtilities.invokeLater(repaintCallback);    // Schedule a repaint on the Event Dispatch Thread (EDT)
                         try {
-                            Thread.sleep(10); // Delay to visualize
+                            Thread.sleep(10);   // Delay to visualize
                         } catch (InterruptedException e) {
                             System.err.println("Error: Thread interrupted.");
                             Thread.currentThread().interrupt(); // Restore interrupt
@@ -114,6 +115,7 @@ public class ImageProcessor {
             });
             threads[i].start();
         }
+
         // Waiting for all threads to complete
         for (Thread t : threads) {
             try {
@@ -127,3 +129,5 @@ public class ImageProcessor {
         SwingUtilities.invokeLater(repaintCallback);
     }
 }
+
+// Source for Event Dispatch Thread (EDT): https://github.com/mgarin/weblaf/wiki/Event-Dispatch-Thread
